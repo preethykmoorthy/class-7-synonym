@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synonym Guess Game - Class 7</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{background:linear-gradient(135deg,#6dd5ed,#2193b0);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+.container{background:white;width:900px;max-width:100%;border-radius:25px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.2);animation:pop .6s ease}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+h1{text-align:center;color:#2193b0;margin-bottom:15px}
+.progress{height:15px;background:#ddd;border-radius:20px;overflow:hidden;margin-bottom:20px}
+.progress-bar{height:100%;width:0%;background:linear-gradient(to right,#00c853,#64dd17);transition:.5s}
+.question{font-size:30px;font-weight:bold;text-align:center;margin:20px 0;color:#333}
+.instruction{text-align:center;margin-bottom:20px;font-size:18px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.option{background:#f8f8f8;border:4px solid transparent;border-radius:20px;padding:15px;cursor:pointer;transition:.4s;text-align:center;overflow:hidden}
+.option:active {transform: scale(0.97)}
+.option:hover{transform:translateY(-8px) scale(1.02)}
+.option img{width:100%;height:250px;object-fit:cover;border-radius:15px;display:block;background-color:#eee}
+.option:hover img{transform:scale(1.04);transition:transform .6s}
+.option h3{margin-top:10px}
+.correct{background:#d4edda;border-color:#28a745;animation:bounce .5s}
+.wrong{background:#f8d7da;border-color:#dc3545;animation:shake .5s}
+@keyframes bounce{50%{transform:scale(1.08)}}
+@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-8px)}}
+.feedback{text-align:center;font-size:28px;font-weight:bold;margin:20px;min-height:50px}
+.next-btn{display:none;margin:auto;padding:12px 35px;font-size:20px;border:none;border-radius:30px;background:#2193b0;color:white;cursor:pointer}
+.next-btn:hover{background:#176d88}
+
+/* Premium Scorecard UI Elements */
+.score-screen{display:none;text-align:center;padding:30px 20px;animation:pop .6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both}
+.card-wrapper{background:linear-gradient(145deg, #ffffff, #f0f4f8);border-radius:20px;padding:35px;box-shadow:inset 0 0 20px rgba(255,255,255,0.6), 0 10px 25px rgba(33,147,176,0.15);border:1px solid rgba(33,147,176,0.1);max-width:600px;margin:0 auto}
+.score-screen h2{font-size:36px;color:#2193b0;margin-bottom:15px;font-weight:800}
+.badge-container{display:inline-block;margin:15px 0;padding:12px 30px;border-radius:50px;box-shadow:0 8px 16px rgba(0,0,0,0.1);animation:floatImg 3s ease-in-out infinite}
+.badge-display{font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff}
+.score-circle{width:140px;height:140px;border-radius:50px;background:white;margin:25px auto;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:0 10px 20px rgba(0,0,0,0.08);border:4px solid #2193b0}
+.score-number{font-size:42px;font-weight:900;color:#333;line-height:1}
+.score-total{font-size:16px;color:#777;margin-top:4px}
+.score-screen p.analysis-text{font-size:20px;color:#555;line-height:1.6;margin-top:15px;font-style:italic}
+
+@keyframes floatImg{
+    0%{transform:translateY(0px)}
+    50%{transform:translateY(-8px)}
+    100%{transform:translateY(0px)}
+}
+
+/* Start screen */
+#startScreen{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:linear-gradient(135deg,rgba(33,147,176,.95),rgba(109,213,237,.90));z-index:40;color:white}
+#startScreen h1{font-size:42px;margin-bottom:10px;text-shadow:0 2px 4px rgba(0,0,0,0.2)}
+#startScreen h2{font-size:24px;margin-bottom:25px;font-weight:300}
+.big-btn{background:#00c853;color:#fff;padding:14px 40px;border-radius:999px;border:none;font-size:22px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.2);transition:transform .18s, background .2s}
+.big-btn:hover{transform:translateY(-6px);background:#00e676}
+</style>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<body>
+
+<div id="startScreen">
+    <h1>🌟 Synonym Challenge 🌟</h1>
+    <h2>Meaning Hunt Game</h2>
+    <button id="startBtn" class="big-btn">▶ Start Game</button>
+</div>
+
+<div class="container">
+    <h1>🌟 Synonym Guessing Game 🌟</h1>
+    <div class="progress"><div class="progress-bar" id="bar"></div></div>
+
+    <div id="quiz">
+        <div class="question" id="word"></div>
+        <div class="instruction">Choose the correct synonym!</div>
+
+    <div class="options">
+      <div class="option" id="a">
+        <img id="imgA" alt="option A" loading="lazy">
+      </div>
+
+      <div class="option" id="b">
+        <img id="imgB" alt="option B" loading="lazy">
+      </div>
+    </div>
+
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="nextBtn">Next ➜</button>
+    </div>
+
+    <div class="score-screen" id="scoreScreen">
+        <div class="card-wrapper">
+            <h2>🏆 Challenge Completed!</h2>
+            
+            <div class="badge-container" id="badgeBg">
+                <div class="badge-display" id="badgeDisplay"></div>
+            </div>
+
+            <div class="score-circle">
+                <span class="score-number" id="scoreNum">0</span>
+                <span class="score-total" id="scoreMax">/ 7</span>
+            </div>
+
+            <p class="analysis-text" id="finalScore"></p>
+            <button id="playAgainBtn" class="next-btn" style="display:block; margin-top: 25px;">🔄 Play Again</button>
+        </div>
+    </div>
+</div>
+
+<audio id="correctSound" src="correct.mp3" style="display:none"></audio>
+<audio id="wrongSound" src="wrong.mp3" style="display:none"></audio>
+
+<script>
+document.querySelector(".container").style.display = "none";
+
+let audioCtx;
+function ensureAudio(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();}}
+function playTone(freq,duration=0.18, type='sine'){
+    try{
+        ensureAudio();
+        const o=audioCtx.createOscillator();
+        const g=audioCtx.createGain();
+        o.type=type; o.frequency.value=freq;
+        o.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.0001,audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.2,audioCtx.currentTime+0.01);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+duration);
+        setTimeout(()=>{o.stop();}, duration*1000+50);
+    }catch(e){/* ignore */}
+}
+function playCorrectSound(){
+    const el=document.getElementById('correctSound');
+    if(el && el.readyState>0){ try{ el.currentTime=0; el.play(); return;}catch(e){} }
+    playTone(880,0.22,'sine'); setTimeout(()=>playTone(1320,0.12,'sine'), 80);
+}
+function playWrongSound(){
+    const el=document.getElementById('wrongSound');
+    if(el && el.readyState>0){ try{ el.currentTime=0; el.play(); return;}catch(e){} }
+    playTone(220,0.28,'sawtooth');
+}
+
+const questions = [
+    {
+        word: "Defenders",
+        wrong: "A",
+        correct: "B",
+        imgWrong: "/static/images/extracted_20.png",
+        imgCorrect: "/static/images/extracted_19.png",
+    },
+    {
+        word: "Scorching Sun",
+        correct: "A",
+        wrong: "B",
+        imgCorrect: "/static/images/extracted_21.png",
+        imgWrong: "/static/images/extracted_22.png",
+    },
+    {
+        word: "Marshes",
+        correct: "A",
+        wrong: "B",
+        imgCorrect: "/static/images/extracted_6.png",
+        imgWrong: "/static/images/extracted_7.png",
+    },
+    {
+        word: "Expanses",
+        correct: "A",
+        wrong: "B",
+        imgCorrect: "/static/images/extracted_24.png",
+        imgWrong: "/static/images/extracted_25.png",
+    },
+    {
+        word: "Wind Chimes",
+        correct: "A",
+        wrong: "B",
+        imgCorrect: "/static/images/extracted_9.png",
+        imgWrong: "/static/images/extracted_10.png",
+    },
+    {
+        word: "Yogis",
+        wrong: "A",
+        correct: "B",
+        imgWrong: "/static/images/extracted_12.png",
+        imgCorrect: "/static/images/extracted_11.png",
+    },
+    {
+        word: "Surveillance",
+        wrong: "A",
+        correct: "B",
+        imgWrong: "/static/images/extracted_15.png",
+        imgCorrect: "/static/images/extracted_14.png",
+    },
+    {
+        word: "Striding",
+        correct: "A",
+        wrong: "B",
+        imgCorrect: "/static/images/extracted_16.png",
+        imgWrong: "/static/images/extracted_17.png",
+    }
+];
+
+let current = 0; let score = 0; let accepting = true;
+
+function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.querySelector('.container').style.display = 'block';
+
+    current = 0;
+    score = 0;
+    accepting = true;
+
+    document.getElementById('bar').style.width = '0%';
+    document.getElementById('scoreNum').innerText = "0";
+
+    document.getElementById('quiz').style.display = 'block';
+    document.getElementById('scoreScreen').style.display = 'none';
+
+    loadQuestion();
+}
+
+function loadQuestion() {
+    accepting = true;
+    const q = questions[current];
+    document.getElementById('word').innerText = q.word;
+    
+    document.getElementById('a').className = 'option';
+    document.getElementById('b').className = 'option';
+    document.getElementById('feedback').innerHTML = '';
+    document.getElementById('nextBtn').style.display = 'none';
+
+    document.getElementById("imgA").removeAttribute("src");
+    document.getElementById("imgB").removeAttribute("src");
+
+    let isACorrect = Math.random() < 0.5;
+
+   if (isACorrect) {
+    q.correctOption = "a";
+    document.getElementById("imgA").src = q.imgCorrect;
+    document.getElementById("imgB").src = q.imgWrong;
+   } else {
+    q.correctOption = "b";
+    document.getElementById("imgA").src = q.imgWrong;
+    document.getElementById("imgB").src = q.imgCorrect;
+}
+
+    let progress = ((current + 1) / questions.length) * 100;
+    document.getElementById('bar').style.width = progress + '%';
+}
+
+function checkAnswer(choice) {
+    if (!accepting) return;
+    accepting = false;
+    const q = questions[current];
+    
+    if (choice === q.correctOption) {
+        document.getElementById(choice).classList.add('correct');
+        document.getElementById('feedback').innerText = '⭐ Excellent! Correct Answer!';
+        score++;
+        playCorrectSound();
+        confetti({ particleCount: 120, spread: 75 });
+    } else {
+        document.getElementById(choice).classList.add('wrong');
+        document.getElementById(q.correctOption).classList.add('correct');
+        document.getElementById('feedback').innerText = '❌ Good Try! Keep Going!';
+        playWrongSound();
+    }
+    document.getElementById('nextBtn').style.display = 'block';
+}
+
+function displayCustomScorecard() {
+    document.getElementById('quiz').style.display = 'none';
+    document.getElementById('scoreScreen').style.display = 'block';
+    document.getElementById('bar').style.width = '100%';
+    
+    document.getElementById('scoreNum').innerText = score;
+    document.getElementById('scoreMax').innerText = `/ ${questions.length}`;
+    
+    const finalScoreText = document.getElementById('finalScore');
+    const badgeDisplay = document.getElementById('badgeDisplay');
+    const badgeBg = document.getElementById('badgeBg');
+    
+    // Performance Tier Card Engine
+    if (score === questions.length) {
+        badgeDisplay.innerHTML = "👑 Vocabulary Royal 👑";
+        badgeBg.style.background = "linear-gradient(135deg, #FFD700, #FFA500)";
+        finalScoreText.innerHTML = "Absolutely beautiful performance! You have fully mastered these complex definitions.";
+        
+        // Massive burst effects
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        setTimeout(() => confetti({ particleCount: 100, spread: 100, angle: 60 }), 300);
+        setTimeout(() => confetti({ particleCount: 100, spread: 100, angle: 120 }), 600);
+    } else if (score >= questions.length * 0.8) {
+        badgeDisplay.innerHTML = "💎 Word Champ 💎";
+        badgeBg.style.background = "linear-gradient(135deg, #00c853, #64dd17)";
+        finalScoreText.innerHTML = "Wonderful job! Your language skills are remarkably bright and precise.";
+        confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
+    } else if (score >= questions.length * 0.5) {
+        badgeDisplay.innerHTML = "✨ Smart Explorer ✨";
+        badgeBg.style.background = "linear-gradient(135deg, #ff9100, #ffae00)";
+        finalScoreText.innerHTML = "Good effort! With just a little more practice, you'll be unstoppable.";
+    } else {
+        badgeDisplay.innerHTML = "📚 Rising Star 📚";
+        badgeBg.style.background = "linear-gradient(135deg, #dc3545, #ff6b6b)";
+        finalScoreText.innerHTML = "Every mistake is a chance to learn! Let's try once more to boost your score.";
+    }
+}
+
+function bindOptions() {
+    document.getElementById('a').onclick = () => checkAnswer('a');
+    document.getElementById('b').onclick = () => checkAnswer('b');
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    current++;
+    if (current < questions.length) {
+        loadQuestion();
+    } else {
+        displayCustomScorecard();
+    }
+});
+
+document.getElementById('startBtn').addEventListener('click', () => { startGame(); });
+document.getElementById('playAgainBtn').addEventListener('click', () => {
+    document.getElementById('quiz').style.display = 'block';
+    document.getElementById('scoreScreen').style.display = 'none';
+    startGame();
+});
+
+bindOptions();
+</script>
+</body>
+</html>
